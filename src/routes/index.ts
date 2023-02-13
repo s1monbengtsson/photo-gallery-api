@@ -1,4 +1,5 @@
 import express from "express"
+import album from './album'
 import resource from './_router'
 
 // instantiate a new router
@@ -13,9 +14,6 @@ router.get('/', (req, res) => {
 	})
 })
 
-/**
- * [EXAMPLE] /resource
- */
-// router.use('/resource', resource)
+router.use('/albums', album)
 
 export default router
