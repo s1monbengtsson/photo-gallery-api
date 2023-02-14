@@ -110,7 +110,31 @@ export const updateAlbum = async (req: Request, res: Response) => {
 
     // get only the validated data from req
 
-}
+
+        const albumId = Number(req.params.albumId)
+        const { title } = req.body
+    
+        try {
+            const result = await prisma.album.update({
+                where: {
+                    id: albumId,
+                },
+                data: {
+                    title
+                }
+            })
+            res.status(200).send({
+                status: "success",
+                message: result
+            })
+        } catch (err) {
+            res.status(500).send({
+                status: "fail",
+                message: "Could not update album"
+            })
+        }
+    }
+
 
 // remove a photo from an album
 export const removePhoto = async (req: Request, res: Response) => {
