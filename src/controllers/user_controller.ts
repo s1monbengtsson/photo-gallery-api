@@ -2,11 +2,15 @@ import { Request, Response} from 'express'
 import { matchedData, validationResult,  } from 'express-validator'
 import prisma from '../prisma'
 import bcrypt from 'bcrypt'
-import { createUser } from '../services/user_service'
+import { createUser, getUserByEmail } from '../services/user_service'
 import Debug from 'debug'
+import jwt from 'jsonwebtoken'
+import { JwtPayload } from '../types'
 
 
-// register a new user
+/**
+ * register a new user
+ */
 export const register = async (req: Request, res: Response) => {
 
     // check for validation errors
@@ -20,7 +24,7 @@ export const register = async (req: Request, res: Response) => {
 
     // get the validated data
     const validatedData = req.body
-    console.log("validated data:", validatedData)
+    console.log("validated data:", matchedData)
 
     // hash and salt incoming password
     const hashedPassword = await bcrypt.hash(validatedData.password, Number(process.env.SALT_ROUNDS) || 10)
@@ -50,13 +54,131 @@ export const register = async (req: Request, res: Response) => {
     }
 }
 
-// log in a user
+/**
+ * login a user
+ */
 export const login = async (req: Request, res: Response) => {
 
+    // destructure email and password from req.body
+    const { email, password } = req.body
 
+    // check if email is registered, and if not, bail
+    const user = await getUserByEmail(email)
+    if (!user) {
+        return res.status(401).send({
+            status: "fail",
+            message: "No user with that email exists"
+        })
+    }
+
+    // check if given credentials match the hashed ones, otherwise bail
+    const result = await bcrypt.compare(password, user.password)
+    if (!result) {
+        return res.status(401).send({
+            status: "fail",
+            message: "Wrong email or password"
+        })
+    }
+
+    // set up a jwt-payload
+    const payload: JwtPayload = {
+        sub: user.id,
+        email: user.email
+    }
+
+    // check if user has secret access token, otherwise bail
+    if(!process.env.ACCESS_TOKEN_SECRET){
+        return res.status(500).send({
+            status: "error",
+            message: "No access_token_secret defined"
+        })
+    }
+
+    // sign the payload with access token secret from .env
+    const access_token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: process.env.ACCESS_TOKEN_LIFETIME || "10m"
+    })
+
+    // check if user has a refresh token
+    if(!process.env.REFRESH_TOKEN_SECRET){
+        return res.status(500).send({
+            status: "error",
+            message: "No refresh token defined"
+        })
+    }
+
+    // sign payload with secret and give user access
+    const refresh_token = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: process.env.REFRESH_TOKEN_LIFETIME || "1h"
+    })
+
+    // respond with access token
+    res.send({
+        status: "success",
+        data: {
+            access_token,
+            refresh_token
+        }
+    })
 }
 
-// get a new access token
+/**
+ * Get a refresh token and generate a new access token
+ */
 export const refresh = async (req: Request, res: Response) => {
+    // check if authorization header exist
+    if (!req.headers.authorization) {
+        return res.status(401).send({
+            status: "fail",
+            message: "Authorization denied"
+        })
+    }
 
+    // split authorization header on space
+    const [authSchema, token] = req.headers.authorization.split(" ")
+
+    // check if authorization header is bearer
+    if (authSchema.toLowerCase() !== "bearer") {
+        return res.status(401).send({
+            status: "fail",
+            message: "Authorization denied"
+        })
+    }
+
+    // verify that refresh token is valid, and get payload
+    try {
+        const { sub, email} = (jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || "") as unknown) as JwtPayload
+
+        // set up jwt payload
+        const payload: JwtPayload = {
+            sub,
+            email
+        }
+
+        // check if user has access token secret
+        if (!process.env.ACCESS_TOKEN_SECRET) {
+            return res.status(500).send({
+                status: "error",
+                message: "No access token secret"
+            })
+        }
+        // sign payload with access token secret and generate a new access token
+        const access_token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: process.env.ACCESS_TOKEN_LIFETIME || "1h"
+        })
+
+        // send new access token
+        res.send({
+            status: "success",
+            data: {
+                access_token
+            }
+        })
+
+    } catch (err) {
+        return res.status(401).send({
+            status: "fail",
+            message: "Authorization denied"
+        })
+    }
 }

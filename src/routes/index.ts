@@ -2,7 +2,8 @@ import express from "express"
 import album from './album'
 import photo from './photo'
 import user from './user'
-import resource from './_router'
+import { register, login, refresh } from '../controllers/user_controller'
+import { validateToken } from "../middlewares/jwt"
 
 // instantiate a new router
 const router = express.Router()
@@ -16,14 +17,14 @@ router.get('/', (req, res) => {
 	})
 })
 
-router.use('/albums', album)
+router.use('/albums', validateToken, album)
 
-router.use('/photos', photo)
+router.use('/photos', validateToken, photo)
 
-router.use('/register', user)
+router.use('/register', register)
 
-router.use('/login', user)
+router.use('/login', login)
 
-router.use('/refresh', user)
+router.use('/refresh', refresh)
 
 export default router
