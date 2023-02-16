@@ -3,7 +3,7 @@
  */
 import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
-import { JwtPayLoad} from '../types'
+import { JwtPayload} from '../types'
 
 /**
  * Validate access token
@@ -32,7 +32,7 @@ export const validateToken = (req: Request, res: Response, next: NextFunction) =
 
     // verify token and attach payload to the request
     try {
-        const payload = (jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "") as unknown) as JwtPayLoad
+        const payload = (jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "") as unknown) as JwtPayload
 
         req.token = payload
 
