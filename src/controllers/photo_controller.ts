@@ -6,7 +6,11 @@ import prisma from '../prisma'
 export const index = async (req: Request, res: Response) => {
 
     try {
-        const photos = await prisma.photo.findMany()
+        const photos = await prisma.photo.findMany({
+            where: {
+                userId: req.token?.sub,
+            }
+        })
 
         res.status(200).send({
             status: "success",
@@ -47,7 +51,15 @@ export const store = async (req: Request, res: Response) => {
 
     // check for validation errors
 
-    const { id, title, url, comment, userId } = req.body
+    const { id, title, url, comment } = req.body
+
+        // check if user has a token, otherwise deny access
+        if (!req.token) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Authorization denied"
+            })
+        }
 
     try {
         const photo = await prisma.photo.create({
@@ -56,7 +68,7 @@ export const store = async (req: Request, res: Response) => {
                title,
                url,
                comment,
-               userId,
+               userId: req.token.sub,
             },
         })
         res.status(200).send({
@@ -65,7 +77,7 @@ export const store = async (req: Request, res: Response) => {
         })
     } catch (err) {
         res.status(500).send({
-            status: "fail",
+            status: "error",
             message: "Could not create photo"
         })
     }

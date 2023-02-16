@@ -5,8 +5,13 @@ import prisma from '../prisma'
 // get all albums
 export const index = async (req: Request, res: Response) => {
 
+
     try {
-        const albums = await prisma.album.findMany()
+        const albums = await prisma.album.findMany({
+            where: {
+                userId: req.token?.sub
+            },
+        })
 
         res.status(200).send({
             status: "success",
@@ -23,10 +28,12 @@ export const index = async (req: Request, res: Response) => {
 // get a single album
 export const show = async (req: Request, res: Response) => {
 
+
     const albumId = Number(req.params.albumId)
     try {
-        const album = await prisma.album.findUniqueOrThrow({
+        const album = await prisma.album.findFirst({
             where: {
+                userId: req.token?.sub,
                 id: albumId
             },
             include: {
@@ -50,14 +57,21 @@ export const store = async (req: Request, res: Response) => {
 
     // check for validation errors
 
-    const { id, title, userId } = req.body
+    const { title } = req.body
+
+    // check if user has a token, otherwise deny access
+    if (!req.token) {
+        return res.status(401).send({
+            status: "fail",
+            message: "Authorization denied"
+        })
+    }
 
     try {
         const album = await prisma.album.create({
             data: {
                 title,
-                userId,
-                id,
+                userId: req.token.sub
             }
         })
         res.status(200).send({
@@ -75,12 +89,20 @@ export const store = async (req: Request, res: Response) => {
 // add a photo to an album
 export const addPhoto = async (req: Request, res: Response) => {
 
+        // check if user has a token, otherwise deny access
+        if (!req.token) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Authorization denied"
+            })
+        }
+
     const photoId = req.body.photoId
 
     try {
         const result = await prisma.album.update({
             where: {
-                id: Number(photoId)
+                id: Number(photoId),
             },
             data: {
                 photos: {
