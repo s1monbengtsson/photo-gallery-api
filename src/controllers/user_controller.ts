@@ -99,7 +99,7 @@ export const login = async (req: Request, res: Response) => {
 
     // sign the payload with access token secret from .env
     const access_token = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: process.env.ACCESS_TOKEN_LIFETIME || "1h"
+        expiresIn: process.env.ACCESS_TOKEN_LIFETIME || "1m"
     })
 
     // check if user has a refresh token
@@ -150,13 +150,11 @@ export const refresh = async (req: Request, res: Response) => {
 
     // verify that refresh token is valid, and get payload
     try {
-        const { sub, email} = (jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || "") as unknown) as JwtPayload
+        const payload = (jwt.verify(token, process.env.REFRESH_TOKEN_SECRET ||  "") as unknown) as JwtPayload
 
-        // set up jwt payload
-        const payload: JwtPayload = {
-            sub,
-            email
-        }
+        // delete issued at and expiry
+        delete payload.iat
+        delete payload.exp
 
         // check if user has access token secret
         if (!process.env.ACCESS_TOKEN_SECRET) {
