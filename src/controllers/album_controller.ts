@@ -89,35 +89,32 @@ export const store = async (req: Request, res: Response) => {
 // add a photo to an album
 export const addPhoto = async (req: Request, res: Response) => {
 
-        // check if user has a token, otherwise deny access
-        if (!req.token) {
-            return res.status(401).send({
-                status: "fail",
-                message: "Authorization denied"
-            })
-        }
+    // map over incoming photo_ids and store each one as an object in photoIds
+	const photoIds = req.body.photo_ids.map( (photoId: Number) => {
+		return {
+			id: photoId,
+		}
+	})  
 
-    const photoId = req.body.photoId
-
-    try {
-        const result = await prisma.album.update({
-            where: {
-                id: Number(photoId),
-            },
-            data: {
-                photos: {
-                    connect: photoId
-                }
-            },
-            include: {
-                photos: true
-            }
-        })
-        res.status(200).send({
+	try {
+		const result = await prisma.album.update({
+			where: {
+				id: Number(req.params.albumId),
+			},
+			data: {
+				photos: {
+					connect: photoIds,
+				}
+			},
+			include: {
+				photos: true,
+			}
+		})
+		res.status(200).send({
             status: "success",
             data: result
         })
-    } catch (err) {
+	}catch (err) {
         res.status(500).send({
             status: "error",
             message: "Could not add photo to album"
@@ -160,17 +157,17 @@ export const updateAlbum = async (req: Request, res: Response) => {
 
 // remove a photo from an album
 export const removePhoto = async (req: Request, res: Response) => {
-
-        const photoId = req.body.photoId
     
         try {
-            const result = await prisma.album.update({
+            await prisma.album.update({
                 where: {
-                    id: Number(req.params.photoId)
+                    id: Number(req.params.albumId)
                 },
                 data: {
                     photos: {
-                        disconnect: photoId
+                        disconnect: {
+                            id: Number(req.params.photoId)
+                        }
                     }
                 },
                 include: {
@@ -179,7 +176,7 @@ export const removePhoto = async (req: Request, res: Response) => {
             })
             res.status(200).send({
                 status: "success",
-                data: result
+                data: null
             })
         } catch (err) {
             res.status(500).send({
