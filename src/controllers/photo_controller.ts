@@ -29,11 +29,19 @@ export const show = async (req: Request, res: Response) => {
 
     const photoId = Number(req.params.photoId)
     try {
-        const photo = await prisma.photo.findUniqueOrThrow({
+        const photo = await prisma.photo.findFirst({
             where: {
+                userId: req.token?.sub,
                 id: photoId
             },
         })
+        // if photo does not belong to logged in user, reject access
+        if (!photo){
+            return res.status(404).send({
+                status: "fail",
+                message: "could not find photo"
+            })
+        }
         res.status(200).send({
             status: "success",
             data: photo
@@ -50,6 +58,13 @@ export const show = async (req: Request, res: Response) => {
 export const store = async (req: Request, res: Response) => {
 
     // check for validation errors
+    const validationErrors = validationResult(req)
+    if(!validationErrors.isEmpty()){
+        return res.status(400).send({
+            status: "fail",
+            data: validationErrors.array()
+        })
+    }
 
     const { id, title, url, comment } = req.body
 
@@ -85,6 +100,15 @@ export const store = async (req: Request, res: Response) => {
 
 // update a photo
 export const updatePhoto = async (req: Request, res: Response) => {
+
+    // check for validation errors
+    const validationErrors = validationResult(req)
+    if(!validationErrors.isEmpty()){
+        return res.status(400).send({
+            status: "fail",
+            data: validationErrors.array()
+        })
+    }
 
     const photoId = Number(req.params.photoId)
     const { title, comment } = req.body

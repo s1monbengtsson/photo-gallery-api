@@ -4,8 +4,6 @@ import prisma from '../prisma'
 
 // get all albums
 export const index = async (req: Request, res: Response) => {
-
-
     try {
         const albums = await prisma.album.findMany({
             where: {
@@ -40,14 +38,22 @@ export const show = async (req: Request, res: Response) => {
                 photos: true
             }
         })
+
+        // if album does not belong to logged in user, reject access
+        if (!album){
+            return res.status(404).send({
+                status: "fail",
+                message: "could not find album"
+            })
+        }
         res.status(200).send({
             status: "success",
             data: album
         })
     } catch (err) {
-        res.status(404).send({
-            status: "fail",
-            message: "Could not find album"
+        res.status(500).send({
+            status: "error",
+            message: "Server error"
         })
     }
 }
@@ -56,6 +62,13 @@ export const show = async (req: Request, res: Response) => {
 export const store = async (req: Request, res: Response) => {
 
     // check for validation errors
+    const validationErrors = validationResult(req)
+    if(!validationErrors.isEmpty()){
+        return res.status(400).send({
+            status: "fail",
+            data: validationErrors.array()
+        })
+    }
 
     const { title } = req.body
 
@@ -89,32 +102,65 @@ export const store = async (req: Request, res: Response) => {
 // add a photo to an album
 export const addPhoto = async (req: Request, res: Response) => {
 
+    // check for validation errors
+    const validationErrors = validationResult(req)
+    if(!validationErrors.isEmpty()){
+        return res.status(400).send({
+            status: "fail",
+            data: validationErrors.array()
+        })
+    }
+
     // map over incoming photo_ids and store each one as an object in photoIds
 	const photoIds = req.body.photo_ids.map( (photoId: Number) => {
 		return {
 			id: photoId,
+            userId: req.token?.sub
 		}
 	})  
 
+    console.log("photo ids:", photoIds)
+
 	try {
-		const result = await prisma.album.update({
-			where: {
-				id: Number(req.params.albumId),
-			},
-			data: {
-				photos: {
-					connect: photoIds,
-				}
-			},
-			include: {
-				photos: true,
-			}
-		})
-		res.status(200).send({
+        // get album by it's id
+        const album = await prisma.album.findFirst({
+            where: {
+                id: Number(req.params.albumId)
+            }
+        })
+        // check if the album belongs to the authenticated user
+        if (album?.userId !== req.token?.sub) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not add photos to an album that does not exist"
+            })
+        }
+
+        const userIds = req.body.photo_ids.map( (userId: Number) => {
+            return {
+                userId: req.token?.sub
+            }
+        })
+        console.log(userIds)
+
+        const result = await prisma.album.update({
+            where: {
+                id: Number(req.params.albumId),
+            },
+            data: {
+                photos: {
+                    connect: photoIds,
+                }
+            },
+            include: {
+                photos: true,
+            }
+        })
+        res.status(200).send({
             status: "success",
             data: result
         })
-	}catch (err) {
+    } catch (err) {
         res.status(500).send({
             status: "error",
             message: "Could not add photo to album"
@@ -125,40 +171,86 @@ export const addPhoto = async (req: Request, res: Response) => {
 // update an album
 export const updateAlbum = async (req: Request, res: Response) => {
 
-    // check for validation errros
-
-    // get only the validated data from req
-
-
-        const albumId = Number(req.params.albumId)
-        const { title } = req.body
+    // check for validation errors
+    const validationErrors = validationResult(req)
+    if(!validationErrors.isEmpty()){
+        return res.status(400).send({
+            status: "fail",
+            data: validationErrors.array()
+        })
+    }
+    const albumId = Number(req.params.albumId)
+    const { title } = req.body
     
-        try {
-            const result = await prisma.album.update({
-                where: {
-                    id: albumId,
-                },
-                data: {
-                    title
-                }
-            })
-            res.status(200).send({
-                status: "success",
-                message: result
-            })
-        } catch (err) {
-            res.status(500).send({
+    try {
+        // get album by it's id
+        const album = await prisma.album.findFirst({
+            where: {
+                id: Number(req.params.albumId)
+            }
+        })
+
+        // check if the album belongs to the authenticated user
+        if (album?.userId !== req.token?.sub) {
+            return res.status(401).send({
                 status: "fail",
-                message: "Could not update album"
+                message: "Can not update an album that does not exist"
             })
         }
+        const result = await prisma.album.update({
+            where: {
+                id: albumId,
+            },
+            data: {
+                title
+            }
+        })
+        res.status(200).send({
+            status: "success",
+            message: result
+        })
+    } catch (err) {
+        res.status(500).send({
+            status: "error",
+            message: "Server Error"
+        })
     }
+}
 
 
 // remove a photo from an album
 export const removePhoto = async (req: Request, res: Response) => {
     
         try {
+            // get album by it's id
+        const album = await prisma.album.findFirst({
+            where: {
+                id: Number(req.params.albumId)
+            }
+        })
+
+        // check if the album belongs to the authenticated user
+        if (album?.userId !== req.token?.sub) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not remove an photo that does not exist"
+            })
+        }
+
+        // get photo by it's id
+        const photo = await prisma.photo.findFirst({
+            where: {
+                id: Number(req.params.photoId)
+            }
+        })
+
+        // check if the album belongs to the authenticated user
+        if (photo?.userId !== req.token?.sub) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not remove an photo that does not exist"
+            })
+        }
             await prisma.album.update({
                 where: {
                     id: Number(req.params.albumId)
@@ -192,7 +284,7 @@ export const destroy = async (req: Request, res: Response) => {
     const albumId = Number(req.params.albumId)
 
     try {
-        const album = await prisma.album.delete({
+        await prisma.album.delete({
             where: {
                 id: albumId
             },
