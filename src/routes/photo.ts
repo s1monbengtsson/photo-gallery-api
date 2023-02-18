@@ -1,5 +1,6 @@
 import express from 'express'
 import { index, updatePhoto, destroy, show, store } from '../controllers/photo_controller'
+import { createPhoto } from '../validations/photo_rules'
 
 const router = express.Router()
 
@@ -10,10 +11,10 @@ router.get('/', index)
 router.get('/:photoId', show)
 
 // create a new photo
-router.post('/', store)
+router.post('/', createPhoto, store)
 
 // update a photo
-router.patch('/:photoId', updatePhoto)
+router.patch('/:photoId', createPhoto, updatePhoto)
 
 // delete a photo
 router.delete('/:photoId', destroy)
