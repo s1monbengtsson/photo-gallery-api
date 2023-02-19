@@ -115,11 +115,10 @@ export const addPhoto = async (req: Request, res: Response) => {
 	const photoIds = req.body.photo_ids.map( (photoId: Number) => {
 		return {
 			id: photoId,
-            userId: req.token?.sub
 		}
-	})  
+	}) 
 
-    console.log("photo ids:", photoIds)
+   console.log("photo ids:", photoIds)
 
 	try {
         // get album by it's id
@@ -136,12 +135,25 @@ export const addPhoto = async (req: Request, res: Response) => {
             })
         }
 
-        const userIds = req.body.photo_ids.map( (userId: Number) => {
-            return {
+        // get photos from array that belong to the authenticated user
+        const photos = await prisma.photo.findMany({
+            where: {
+                id: {
+                    in: photoIds.map((photo:any) => photo.id)
+                },
                 userId: req.token?.sub
-            }
+            },
         })
-        console.log(userIds)
+        console.log("photos:", photos)
+        console.log("photos:", typeof photos)
+
+        // check if all photos belong to the authenticated user
+        if (photos.length !== photoIds.length) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not add photos that do not exist"
+            })
+        }
 
         const result = await prisma.album.update({
             where: {
