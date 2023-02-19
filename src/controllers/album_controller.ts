@@ -296,6 +296,20 @@ export const destroy = async (req: Request, res: Response) => {
     const albumId = Number(req.params.albumId)
 
     try {
+        // get album by it's id
+        const album = await prisma.album.findFirst({
+            where: {
+                id: Number(req.params.albumId)
+            }
+        })
+
+        // check if the album belongs to the authenticated user
+        if (album?.userId !== req.token?.sub) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not delete an album that does not exist"
+            })
+        }
         await prisma.album.delete({
             where: {
                 id: albumId

@@ -114,6 +114,20 @@ export const updatePhoto = async (req: Request, res: Response) => {
     const { title, comment } = req.body
 
     try {
+        // get photo by it's id
+        const photo = await prisma.photo.findFirst({
+            where: {
+                id: Number(req.params.photoId)
+            }
+        })
+
+        // check if the photo belongs to the authenticated user
+        if (photo?.userId !== req.token?.sub) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not update an photo that does not exist"
+            })
+        }
         const result = await prisma.photo.update({
             where: {
                 id: photoId,
@@ -141,7 +155,21 @@ export const destroy = async (req: Request, res: Response) => {
     const photoId = Number(req.params.photoId)
 
     try {
-        const photo = await prisma.photo.delete({
+        // get photo by it's id
+        const photo = await prisma.photo.findFirst({
+            where: {
+                id: Number(req.params.photoId)
+            }
+        })
+
+        // check if the photo belongs to the authenticated user
+        if (photo?.userId !== req.token?.sub) {
+            return res.status(401).send({
+                status: "fail",
+                message: "Can not delete a photo that does not exist"
+            })
+        }
+        await prisma.photo.delete({
             where: {
                 id: photoId
             },
