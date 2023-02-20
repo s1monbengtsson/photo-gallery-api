@@ -6,8 +6,8 @@ import { body } from 'express-validator'
 import { getUserByEmail } from '../services/user_service'
 
 export const CreateUserRules = [
-    body('first_name').isString().bail().withMessage('First name property has to be a string').bail().isLength({min: 2}),
-    body('last_name').isString().bail().withMessage('Last name property has to be a string').bail().isLength({min: 2}),
+    body('first_name').isString().bail().withMessage('First name property has to be a string').bail().isLength({min: 3}),
+    body('last_name').isString().bail().withMessage('Last name property has to be a string').bail().isLength({min: 3}),
     body('email').isEmail().custom(async (data: string) => {
 
 		// check if a user with that email already exists
