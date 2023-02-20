@@ -9,5 +9,5 @@ export const createAlbum = [
 ]
 
 export const validatePhotoId = [
-//    body('photo_id').isArray().withMessage('Has to be an array').isInt({min: 1}).withMessage('Must be a number')
+    body('photo_ids').isArray().withMessage('Has to be an array').isInt({min: 1}).withMessage('Must be a number')
 ]
