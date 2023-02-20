@@ -2,7 +2,9 @@ import { Request, Response} from 'express'
 import { validationResult } from 'express-validator'
 import prisma from '../prisma'
 
-// get all albums
+/**
+ * Get all albums
+ */ 
 export const index = async (req: Request, res: Response) => {
     try {
         const albums = await prisma.album.findMany({
@@ -10,7 +12,6 @@ export const index = async (req: Request, res: Response) => {
                 userId: req.token?.sub
             },
         })
-
         res.status(200).send({
             status: "success",
             data: albums
@@ -23,7 +24,9 @@ export const index = async (req: Request, res: Response) => {
     }
 }
 
-// get a single album
+/**
+ * Get a single album
+ */
 export const show = async (req: Request, res: Response) => {
 
 
@@ -43,7 +46,7 @@ export const show = async (req: Request, res: Response) => {
         if (!album){
             return res.status(404).send({
                 status: "fail",
-                message: "could not find album"
+                message: "Could not find album"
             })
         }
         res.status(200).send({
@@ -53,12 +56,14 @@ export const show = async (req: Request, res: Response) => {
     } catch (err) {
         res.status(500).send({
             status: "error",
-            message: "Server error"
+            message: "Unable to communicate with database"
         })
     }
 }
 
-// create a new album
+/**
+ * Create a new album
+ */
 export const store = async (req: Request, res: Response) => {
 
     // check for validation errors
@@ -87,7 +92,7 @@ export const store = async (req: Request, res: Response) => {
                 userId: req.token.sub
             }
         })
-        res.status(200).send({
+        res.status(201).send({
             status: "success",
             data: album
         })
@@ -99,7 +104,9 @@ export const store = async (req: Request, res: Response) => {
     }
 }
 
-// add a photo to an album
+/**
+ * Add a photo to an album
+ */
 export const addPhoto = async (req: Request, res: Response) => {
 
     // check for validation errors
@@ -117,8 +124,6 @@ export const addPhoto = async (req: Request, res: Response) => {
 			id: photoId,
 		}
 	}) 
-
-   console.log("photo ids:", photoIds)
 
 	try {
         // get album by it's id
@@ -139,13 +144,11 @@ export const addPhoto = async (req: Request, res: Response) => {
         const photos = await prisma.photo.findMany({
             where: {
                 id: {
-                    in: photoIds.map((photo:any) => photo.id)
+                    in: photoIds.map((photo: any) => photo.id)
                 },
                 userId: req.token?.sub
             },
         })
-        console.log("photos:", photos)
-        console.log("photos:", typeof photos)
 
         // check if all photos belong to the authenticated user
         if (photos.length !== photoIds.length) {
@@ -175,12 +178,14 @@ export const addPhoto = async (req: Request, res: Response) => {
     } catch (err) {
         res.status(500).send({
             status: "error",
-            message: "Could not add photo to album"
+            message: "Unable to communicate with database"
         })
     }
 }
 
-// update an album
+/**
+ * Update an album
+ */
 export const updateAlbum = async (req: Request, res: Response) => {
 
     // check for validation errors
@@ -191,6 +196,7 @@ export const updateAlbum = async (req: Request, res: Response) => {
             data: validationErrors.array()
         })
     }
+
     const albumId = Number(req.params.albumId)
     const { title } = req.body
     
@@ -219,18 +225,19 @@ export const updateAlbum = async (req: Request, res: Response) => {
         })
         res.status(200).send({
             status: "success",
-            message: result
+            data: result
         })
     } catch (err) {
         res.status(500).send({
             status: "error",
-            message: "Server Error"
+            message: "Unable to communicate with database"
         })
     }
 }
 
-
-// remove a photo from an album
+/**
+ * Remove photo from album
+ */
 export const removePhoto = async (req: Request, res: Response) => {
     
         try {
@@ -285,12 +292,14 @@ export const removePhoto = async (req: Request, res: Response) => {
         } catch (err) {
             res.status(500).send({
                 status: "error",
-                message: "Could not remove photo from album"
+                message: "Unable to communicate with database"
             })
         }
     }
 
-// delete an album
+/**
+ * Delete an album 
+ */
 export const destroy = async (req: Request, res: Response) => {
 
     const albumId = Number(req.params.albumId)
@@ -322,7 +331,7 @@ export const destroy = async (req: Request, res: Response) => {
     } catch (err) {
         res.status(500).send({
             status: "error",
-            message: "Could not delete album"
+            message: "Unable to communicate with database"
         })
     }
 }

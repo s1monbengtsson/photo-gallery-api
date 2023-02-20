@@ -1,6 +1,5 @@
 import { Request, Response} from 'express'
 import { matchedData, validationResult,  } from 'express-validator'
-import prisma from '../prisma'
 import bcrypt from 'bcrypt'
 import { createUser, getUserByEmail } from '../services/user_service'
 import jwt from 'jsonwebtoken'

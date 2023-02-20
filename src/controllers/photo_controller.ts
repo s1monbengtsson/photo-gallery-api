@@ -2,7 +2,9 @@ import { Request, Response} from 'express'
 import { validationResult } from 'express-validator'
 import prisma from '../prisma'
 
-// get all photos
+/**
+ * Get all photos
+ */
 export const index = async (req: Request, res: Response) => {
 
     try {
@@ -24,7 +26,9 @@ export const index = async (req: Request, res: Response) => {
     }
 }
 
-// get a single photo
+/**
+ * Get a single photo
+ */
 export const show = async (req: Request, res: Response) => {
 
     const photoId = Number(req.params.photoId)
@@ -35,7 +39,7 @@ export const show = async (req: Request, res: Response) => {
                 id: photoId
             },
         })
-        // if photo does not belong to logged in user, reject access
+        // if photo does not belong to logged in user, deny access
         if (!photo){
             return res.status(404).send({
                 status: "fail",
@@ -47,14 +51,16 @@ export const show = async (req: Request, res: Response) => {
             data: photo
         })
     } catch (err) {
-        res.status(404).send({
+        res.status(500).send({
             status: "fail",
-            message: "Could not find photo"
+            message: "Unable to communicate with database"
         })
     }
 }
 
-// post a new photo
+/**
+ * Create a photo
+ */
 export const store = async (req: Request, res: Response) => {
 
     // check for validation errors
@@ -86,19 +92,21 @@ export const store = async (req: Request, res: Response) => {
                userId: req.token.sub,
             },
         })
-        res.status(200).send({
+        res.status(201).send({
             status: "success",
             data: photo
         })
     } catch (err) {
         res.status(500).send({
             status: "error",
-            message: "Could not create photo"
+            message: "Unable to communicate with database"
         })
     }
 }
 
-// update a photo
+/**
+ * Update a photo
+ */
 export const updatePhoto = async (req: Request, res: Response) => {
 
     // check for validation errors
@@ -123,7 +131,7 @@ export const updatePhoto = async (req: Request, res: Response) => {
 
         // check if the photo belongs to the authenticated user
         if (photo?.userId !== req.token?.sub) {
-            return res.status(401).send({
+            return res.status(404).send({
                 status: "fail",
                 message: "Can not update an photo that does not exist"
             })
@@ -145,12 +153,14 @@ export const updatePhoto = async (req: Request, res: Response) => {
     } catch (err) {
         res.status(500).send({
             status: "fail",
-            message: "Could not update photo"
+            message: "Unable to communicate with database"
         })
     }
 }
 
-// delete a photo
+/**
+ * Delete a photo
+ */
 export const destroy = async (req: Request, res: Response) => {
 
     const photoId = Number(req.params.photoId)
@@ -165,7 +175,7 @@ export const destroy = async (req: Request, res: Response) => {
 
         // check if the photo belongs to the authenticated user
         if (photo?.userId !== req.token?.sub) {
-            return res.status(401).send({
+            return res.status(404).send({
                 status: "fail",
                 message: "Can not delete a photo that does not exist"
             })
@@ -182,7 +192,7 @@ export const destroy = async (req: Request, res: Response) => {
     } catch (err) {
         res.status(500).send({
             status: "error",
-            message: "Could not delete photo"
+            message: "Unable to communicate with database"
         })
     }
 }
