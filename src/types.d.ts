@@ -10,13 +10,6 @@ export type CreateUserData = {
     password: string
 }
 
-// type for updating a current user
-export type UpdateUserData = {
-	name?: string,
-	email?: string,
-	password?: string,
-}
-
 // type for sending payload
 export type JwtPayload = {
     sub: number,
