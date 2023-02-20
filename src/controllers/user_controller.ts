@@ -3,7 +3,6 @@ import { matchedData, validationResult,  } from 'express-validator'
 import prisma from '../prisma'
 import bcrypt from 'bcrypt'
 import { createUser, getUserByEmail } from '../services/user_service'
-import Debug from 'debug'
 import jwt from 'jsonwebtoken'
 import { JwtPayload } from '../types'
 
@@ -23,8 +22,8 @@ export const register = async (req: Request, res: Response) => {
     }
 
     // get the validated data
-    const validatedData = req.body
-    console.log("validated data:", matchedData)
+    const validatedData = matchedData(req)
+    console.log("validated data:", validatedData)
 
     // hash and salt incoming password
     const hashedPassword = await bcrypt.hash(validatedData.password, Number(process.env.SALT_ROUNDS) || 10)

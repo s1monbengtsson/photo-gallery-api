@@ -1,5 +1,5 @@
 import prisma from '../prisma'
-import { CreateUserData, UpdateUserData } from '../types'
+import { CreateUserData } from '../types'
 
 // new user
 export const createUser = async (data: CreateUserData) => {

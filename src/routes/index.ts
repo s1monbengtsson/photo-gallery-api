@@ -1,8 +1,8 @@
 import express from "express"
 import album from './album'
 import photo from './photo'
-import user from './user'
 import { register, login, refresh } from '../controllers/user_controller'
+import { createUserRules } from "../validations/user_rules"
 import { validateToken } from "../middlewares/jwt"
 
 // instantiate a new router
@@ -21,7 +21,7 @@ router.use('/albums', validateToken, album)
 
 router.use('/photos', validateToken, photo)
 
-router.use('/register', register)
+router.use('/register', createUserRules, register)
 
 router.use('/login', login)
 
