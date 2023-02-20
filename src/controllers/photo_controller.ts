@@ -111,7 +111,7 @@ export const updatePhoto = async (req: Request, res: Response) => {
     }
 
     const photoId = Number(req.params.photoId)
-    const { title, comment } = req.body
+    const { title, comment, url } = req.body
 
     try {
         // get photo by it's id
@@ -134,6 +134,7 @@ export const updatePhoto = async (req: Request, res: Response) => {
             },
             data: {
                 title,
+                url,
                 comment,
             }
         })
