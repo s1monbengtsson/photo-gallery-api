@@ -4,7 +4,7 @@
 ## TypeScript, Node.js, Prisma
 
 - Register an account
-- Login and receive an access_token for authenticating
+- Login and receive an access_token for authention
 - Create albums and photos
 - Update albums and photos
 - Link specific photos to an album
@@ -14,13 +14,13 @@
 
 https://pleasant-sweatsuit-lion.cyclic.app/
 
+
 ## Endpoints
 
 ### user 
 - /register
 - /login
 - /refresh
-
 
 ### albums
 - GET /albums /albums:albumId
@@ -29,7 +29,6 @@ https://pleasant-sweatsuit-lion.cyclic.app/
 - PATCH /albums/:albumId
 - DELETE /albums/:albumId/photos/:photoId
 - DELETE /albums/:albumId
-
 
 ### photos
 - GET /photos
