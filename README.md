@@ -1,15 +1,41 @@
-# FED22 API-utveckling Prisma Boilerplate
+# Backend Photo Gallery with Login
 
-This is a starter template/boilerplate for a TypeScript Node.js REST API using Express, Prisma and Express-validator.
 
-## Usage
+## TypeScript, Node.js, Prisma
 
-Create a new repository on your GitHub profile using this template by clicking on **Use this template** above the file list and selecting **Create a new repository**.
+-Register an account
+-Login and receive an access_token for authenticating
+-Create albums and photos
+-Update albums and photos
+-Link specific photos to an album
+-Disconnet specific phots from an album
+-Delete albums and photos
+-Renew your access via a refresh_token
 
-After your respository has been created on your GitHub profile, clone the repository, create an `.env` file and copy the contents from `.env.example`. Create a new MySQL-database and change the database-name in `DATABASE_URL` after the last slash to the name of your database.
+https://pleasant-sweatsuit-lion.cyclic.app/
 
-Run `npm install` to install all packages and then start the server using `npm run dev`.
+## Endpoints
 
-## Build
+### user 
+/register
+/login
+/refresh
 
-Delete the `build/` directory if it exists from a previous build, and then run `npm run build` to transpile TypeScript into JavaScript.
+
+### albums
+GET /albums /albums:albumId
+POST /albums
+POST /albums/:albumId/photos
+PATCH /albums/:albumId
+DELETE /albums/:albumId/photos/:photoId
+DELETE /albums/:albumId
+
+
+### photos
+GET /photos
+GET /photos/:photoId
+POST /photos
+PATCH /photos/:photoId
+DELETE /photos/:photoId
+
+
