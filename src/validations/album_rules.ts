@@ -5,7 +5,7 @@
 import { body } from 'express-validator'
 
 export const createAlbum = [
-    body('title').isString().withMessage('Must be a string').bail().isLength({min: 3}).withMessage('Title must be at least 3 characters long')
+    body('title').isString().withMessage('Must be a string').bail().trim().isLength({min: 3}).withMessage('Title must be at least 3 characters long')
 ]
 
 export const validatePhotoId = [
