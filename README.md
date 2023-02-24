@@ -1,4 +1,4 @@
-# Backend Photo Gallery with Login
+# Backend Photo Gallery with JWT Authentication
 
 
 ## TypeScript, Node.js, Prisma
